@@ -1,0 +1,1627 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>MiRO - Maze in a Real OS</title>
+  <!--preload-->
+  <link rel="preload" href="./en_js/vue_control.js" as="script">
+  <!--real load-->
+  <link rel="stylesheet" href="./css/miro_game_main.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="./en_js/us.js"></script>
+  <script src="./en_js/timesys.js"></script>
+  <script src="./en_js/dirsys.js"></script>
+  <script src="./en_js/mailsys.js"></script>
+  <script src="https://code.createjs.com/1.0.0/soundjs.min.js"></script>
+  <script src="./common/sound.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+    integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="./en_js/image_control.js"></script>
+  <script src="./en_js/files.js"></script>
+  <script src="./en_js/mails.js"></script>
+  <script src="./en_js/status_control.js"></script>
+  <script src="./en_js/ending4.js"></script>
+</head>
+
+<body>
+  <header>
+    MiRO
+  </header>
+  <div id="game" class="compatible">
+    <div id="no_to_fullscreen" v-if="!is_fullscreen && !is_image_loaded_complete">
+      <div>
+        <div id="loader">
+          <img src="./image/welcome/loader_rotate.png" class="loader_image">
+        </div>
+      </div>
+      <div id="onloading">
+      </div>
+    </div>
+    <div id="to_fullscreen" v-if="!is_fullscreen && is_image_loaded_complete">
+      <div>
+        <pre>
+> It’s been four months since I was promoted as manager.
+> I can’t help but notice, there’s something weird going
+  on around here…
+> My only job is to inspect files,
+> And I don’t even have access to the admin account of my
+  own computer?
+> Why? For whom?
+> First things first, I turn on my computer, to do my job, 
+  as always...
+          </pre>
+      </div>
+      <button id="set-fullscreen-image" v-on:click="set_fullscreen"><img src="./image/welcome/power_on.png" /></button>
+    </div>
+    <div id="game_content" v-if="is_fullscreen">
+      <!-- 1. welcome screen at stage 1-->
+      <div id="welcome_screen" class="os_frame" v-if="!is_logged && !is_sleeping">
+        <div class="os_user_accounts">
+          <div class="os_user_account_item" @click="welcome_ask_password(account)"
+            v-for="account in os_user_accounts_current">
+
+            <img src="./image/welcome/welcome_icon.png">
+            <span>
+              <%account[0]%>
+            </span>
+
+          </div>
+        </div>
+        <transition name="slide-fade" v-if="visibility.os_admin_password">
+          <div class="os_welcome_ask_password">
+            <input type="password" autocomplete="off" placeholder="Password" id="welcome_password"
+              @keyup="welcome_check_password_by_enter($event)" /><input type="button" value="→"
+              @click="welcome_check_password($event)" />
+            <br /><br /><br />
+            <span v-if="this.visibility.os_admin_password_wrong && is_capslock_on">
+              Caps Lock is on.<br /><br />
+            </span>
+            <span v-if="this.visibility.os_admin_password_wrong">
+              Incorrect password. Please enter again.<br /><br /><br />
+            </span>
+            <a @click="welcome_revert_account_selection()">Switch Account</a>
+
+          </div>
+        </transition>
+      </div>
+
+      <!--1-2. intro_screen-->
+      <div id="logon_loading" data-shown="false">
+        <div class="loading_screen_admin">
+          <div class="loading_letter_wrapper">
+            <div class="loading_line_1">
+              <span class="r">PA</span><span class="b">CIFIC TELECOMMUN</span><span class="r">IC</span><span
+                class="b">ATI</span><span class="r">ON</span><span class="b">S</span>
+            </div>
+            <div class="loading_line_2">
+              <span class="b">& </span><span class="r">N</span><span class="b">ETW</span><span class="r">O</span><span
+                class="b">RK </span><span class="r">P</span><span class="b">AR</span><span class="r">T</span><span
+                class="b">NER</span>
+            </div>
+            <div class="loading_bar_wrap">
+              <div class="loading_bar"></div>
+            </div>
+          </div>
+        </div>
+        <div class="loading_screen">
+          <div class="loading_letter_wrapper">
+            <div class="loading_line_1">
+              <span class="r">PA</span><span class="b">CIFIC TELECOMMUN</span><span class="r">IC</span><span
+                class="b">ATI</span><span class="r">ON</span><span class="b">S</span>
+            </div>
+            <div class="loading_line_2">
+              <span class="b">& </span><span class="r">N</span><span class="b">ETW</span><span class="r">O</span><span
+                class="b">RK </span><span class="r">P</span><span class="b">AR</span><span class="r">T</span><span
+                class="b">NER</span>
+            </div>
+            <div class="loading_bar_wrap">
+              <div class="loading_bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--2. Wallpaper-->
+      <div id="wallpaper" class="os_frame" v-if="is_logged && !is_sleeping" @click="desktop_click_off($event)">
+        <div class="wallpaper_worker" v-if="!is_admin"></div>
+        <div class="wallpaper_admin" v-if="is_admin"></div>
+        <div class="wallpaper_note" v-if="!is_admin">
+          <div class="title">To-do List</div>
+          <ol>
+            <li v-for="task in user_tasks">
+              <%task.name%>
+            </li>
+          </ol>
+        </div>
+        <div id="icon_grid" v-if="!is_admin">
+          <div class="icon" v-for="(ic, i) in desktop_folder.get_childs()" :data-x="i/5" :data-y="i%5" :data-id="i"
+            @click="desktop_click(i, $event)" data-clicked="false" @dblclick="explorer_open_file(ic)">
+            <img :src="ic.get_icon()" @load="arrange_desktop_icon()" />
+            <span>
+              <%ic.name%>
+            </span>
+          </div>
+        </div>
+        <div id="icon_grid" v-if="is_admin">
+          <div class="icon" v-for="(ic, i) in desktop_folder.get_childs()" :data-x="i/4" :data-y="i%4" :data-id="i"
+            @click="desktop_click(i, $event)" data-clicked="false" @dblclick="explorer_open_file(ic)">
+            <img :src="ic.get_icon()" @load="arrange_desktop_icon()" />
+            <span>
+              <%ic.name%>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!--2-1 desktop alert 1: no app-->
+      <div class="alert_wrap" id="before_shutdown" v-if="lnk_has_no_app">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              No file or application
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('', 'lnk_has_no_app')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            This .lnk file has no connected file or application.
+            <div class="alert_buttons">
+              <div class="confirm" @click="alert_cancel('', 'lnk_has_no_app')">OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--3. taskbar-->
+      <div id="taskbar" v-if="is_logged && !is_sleeping" @load="set_taskbar_position()">
+        <div id="taskbar_icons">
+          <div class="icons" id="taskbar_start" data-selected="false" @click="toggle_start()">
+            <img src="./image/taskbar/taskbar_start.svg" />
+          </div>
+          <div class="icons" id="taskbar_explorer" :data-active="app_active.app_explorer && app_running.app_explorer"
+            :data-selected="app_running.app_explorer.toString()" @click="toggle_app('explorer'); close_start()">
+            <img src="./image/desktop/desktop_computer.svg" />
+          </div>
+          <div class="icons" id="taskbar_mail" :data-active="app_active.app_mail && app_running.app_mail"
+            v-if="os_has_app('mail.app')" :data-selected="app_running.app_mail.toString()"
+            @click="toggle_app('mail'); close_start()">
+            <img src="./image/notif/notifs_mail.svg" />
+          </div>
+          <div class="icons" id="taskbar_browser" :data-active="app_active.app_browser && app_running.app_browser"
+            v-if="os_has_app('browser.app')" :data-selected="app_running.app_browser.toString()"
+            @click="toggle_app('browser'); close_start()">
+            <img src="./image/desktop/desktop_browser.svg" />
+          </div>
+          <div class="icons" id="taskbar_reader" :data-active="app_active.app_reader && app_running.app_reader"
+            v-if="os_has_app('reader.app')" :data-selected="app_running.app_reader.toString()"
+            @click="toggle_app('reader'); close_start()">
+            <img src="./image/desktop/desktop_viewer.svg" />
+          </div>
+          <div class="icons" id="taskbar_inspector" :data-active="app_active.app_inspector && app_running.app_inspector"
+            v-if="os_has_app('inspector.app')" :data-selected="app_running.app_inspector.toString()"
+            @click="toggle_app('inspector'); close_start()">
+            <img src="./image/inspector/inspector_icon.svg" />
+          </div>
+          <div class="icons" v-if="is_admin && app_running.app_bin" id="taskbar_bin"
+            :data-active="app_active.app_bin && app_running.app_bin" :data-selected="app_running.app_bin.toString()"
+            @click="toggle_app('bin'); close_start()">
+            <img src="./image/desktop/desktop_bin.svg" />
+          </div>
+        </div>
+        <div id="taskbar_status">
+          <div id="taskbar_network">
+            <img src="./image/taskbar/taskbar_network.svg" />
+          </div>
+          <div id="taskbar_firewall" v-if="has_plugin('vaccine.plg')">
+            <img src="./image/plugin/firewall.svg" />
+          </div>
+          <div id="taskbar_datetime" v-html="os_time"></div>
+          <div id="taskbar_tools">
+            <div id="taskbar_tools_noti" @click="toggle_notification()">
+              <img src="./image/taskbar/taskbar_notifs.svg" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--3-1. Start Menu-->
+      <div id="start_menu" v-if="visibility.start_menu">
+        <div id="start_area">
+          <div class="start_menu_item">
+            <img src="./image/taskbar/taskbar_user.svg" />
+            <span>
+              <%os_user_accounts_current[0][0]%>
+            </span>
+          </div>
+          <div class="start_menu_item" @click="os_sleep(); close_start()">
+            <img src="./image/taskbar/taskbar_powersave.svg" />
+            <span>Sleep Mode</span>
+          </div>
+          <div class="start_menu_item" @click="os_logout(); close_start()">
+            <img src="./image/taskbar/taskbar_changeuser.svg" />
+            <span>Switch User</span>
+          </div>
+          <div class="start_menu_item" @click="os_shutdown(); close_start()">
+            <img src="./image/taskbar/taskbar_poweroff.svg" />
+            <span>Shut Down</span>
+          </div>
+        </div>
+        <div id="start_background" @click="close_start()"></div>
+      </div>
+
+      <!--3-2 taskbar alert 2: before shutdown-->
+      <div class="alert_wrap" id="before_shutdown" v-if="is_about_shutdown">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              Shut Down
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('', 'is_about_shutdown')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            Unsaved data will be lost. <br />
+            Are you sure you want to shut down?
+            <div class="alert_buttons">
+              <div class="confirm" @click="os_force_shutdown()">Shut Down</div>
+              <div class="confirm" @click="alert_cancel('', 'is_about_shutdown')">Cancel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--4. Notification Center-->
+      <div id="noti_center" v-if="visibility.notification_center">
+        <div id="noti_area">
+          <h1>
+            <span>Notification Center</span>
+          </h1>
+
+          <div class="day_wrap" v-for="ord in notification_app_order" v-if="notifications[ord].data.length > 0">
+            <div class="day">
+              <div class="app">
+                <div class="app_title"><img :src="notifications[ord].icon" /><span class="title">
+                    <%notifications[ord].name%>
+                  </span><span class="count">
+                    <%notifications[ord].data.length%>
+                  </span></div>
+                <div class="app_close" @click="clear_app_notification(ord)">&times;</div>
+                <div class="item" v-for="(dt, idx) in notifications[ord].data"
+                  @click="notification_app_action(ord, idx, dt.title)">
+                  <img :src="dt.icon" v-if="dt.icon" />
+                  <span class="title" v-if="dt.icon">
+                    <%dt.title%>
+                  </span>
+                  <span class="title_noicon" v-else>
+                    <%dt.title%>
+                  </span>
+                  <span class="desc">
+                    <%dt.desc%>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="day_wrap" v-if="notification_total_count == 0">
+            <div class="day">
+              <div class="app">
+                No New Notifications
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div id="noti_background" @click="close_notification()"></div>
+      </div>
+
+      <!--4-1. instant notification-->
+      <div id="notification_banner_area" v-if="is_logged && instant_notification.length > 0">
+        <div class="notification_banner" v-for="n in instant_notification">
+          <img :src="n.icon" />
+          <span>
+            <%n.title%>
+          </span>
+        </div>
+      </div>
+
+      <!--5. Mail App-->
+      <div id="app_mail" v-if="visibility.app_mail" class="app_frame mail" @click="activate_app('mail')">
+        <div class="app_title_bar">
+          <div class="app_title_icon">
+            <img src="./image/notif/notifs_mail.svg" />
+          </div>
+          <div class="app_title_name">
+            Mail
+          </div>
+          <div class="app_title_control">
+            <div class="app_minimize" @click="minimize_app('mail')">
+              <img src="./image/app/app_minimize.svg" />
+            </div>
+            <div class="app_close" @click="close_app('mail')">
+              <img src="./image/app/app_close.svg" />
+            </div>
+
+          </div>
+        </div>
+        <div class="app_body">
+          <div class="app_body_sidebar">
+            <div class="app_sidebar_item big" @click="mail_write()">
+              <div class="icon"><img src="./image/mail/mail_new.svg" /></div>
+              <div class="desc">
+                <span class="name">Compose</span>
+              </div>
+            </div>
+            <div class="app_sidebar_item">
+              <div class="icon"><img src="./image/taskbar/taskbar_changeuser.svg" /></div>
+              <div class="desc">
+                <span class="name">Accounts</span>
+              </div>
+            </div>
+
+            <div class="app_sidebar_item" v-for="acc in app_mail.mail_contacts" @click="mail_select(acc.name)">
+              <div class="icon">
+                <span class="new_count" v-if="acc.new_count > 0">
+                  <%acc.new_count%>
+                </span>
+              </div>
+              <div class="desc selected" v-if="acc.name == app_mail.mail_data_current">
+                <span class="name">
+                  <%acc.name%>
+                </span>
+                <span class="date">
+                  <%acc.date.split(' ').slice(1).join(' ')%></span>
+        </div>
+        <div class="desc" v-else>
+          <span class="name"><%acc.name%></span>
+          <span class="date"><%acc.date.split(' ').slice(1).join(' ')%></span>
+        </div>
+      </div>
+      
+    </div>
+    <div class="app_body_content" id="mail_feed" v-if="!app_mail.write_mode && !app_mail.detail_mode">
+      <div class="mail_content">
+        <div class="mail_content_item" v-for="mail in app_mail.mail_data[app_mail.mail_data_current]" :key="mail.date">
+          <div :class="mail.io" @click="mail_detail_view(mail)">
+            <div class="meta_area">
+              <div class="name" v-if="mail.io == ' in'">
+                    <%app_mail.mail_data_current%><br />
+                      <%mail_current_out_address()%>
+              </div>
+              <div class="name" v-else>Me<br />
+                <%app_mail.my_account%>
+              </div>
+              <div class="date">
+                <%mail.date%>
+              </div>
+            </div>
+            <div class="address">
+              <%mail.address%>
+            </div>
+            <div class="title">
+              <span v-if="mail.attatch.length > 0" class="mail_attach_note">
+                <img src="./image/mail/mail_attach.svg" />
+              </span>
+              <%mail.title%>
+            </div>
+            <!--buttonize!-->
+            <div class="detail_button">See More</div>
+          </div>
+        </div>
+      </div>
+      <div class="mail_reply" @click="request_hint()" v-if="hints.mode && get_available_hints_count() > 0">
+        <img src="./image/mail/mail_send.svg" />
+        <div class="button_text">Ask</div>
+      </div>
+      <div class="mail_reply disabled" v-else-if="hints.mode">
+        <img src="./image/mail/mail_send.svg" />
+        <div class="button_text">Ask</div>
+      </div>
+      <div class="mail_reply" @click="mail_reply()" v-else-if="mail_current_out_address()">
+        <img src="./image/mail/mail_reply.svg" />
+        <div class="button_text">Reply</div>
+      </div>
+    </div>
+
+    <div class="app_body_content" id="mail_feed" v-else-if="!app_mail.write_mode && app_mail.detail_mode">
+      <div class="mail_content">
+        <div class="mail_detail_item">
+          <div class="mail_detail_header">
+
+            <div class="mail_back" @click="mail_discard_detail()">
+              <img src="./image/app/app_leftarrow.svg" />
+            </div>
+            <div class="meta_area">
+              <div class="name_wrap">
+                <span class="name" v-if="app_mail.detail_mail.io == 'in'">
+                  <%app_mail.mail_data_current%>
+                </span>
+                <span class="name" v-else>Me</span>
+                <span class="date">
+                  <%app_mail.detail_mail.date%>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="address" v-if="app_mail.detail_mail.io == 'in' && mail_current_out_address()">
+            <%mail_current_out_address()%>
+          </div>
+          <div class="address" v-else-if="app_mail.detail_mail.io == 'out'">
+            <%app_mail.my_account%>
+          </div>
+          <div class="to" v-if="app_mail.detail_mail.io == 'in'">To: Me &lt;<%app_mail.my_account%>&gt;</div>
+          <div class="to" v-else>To: <%app_mail.mail_data_current%> &lt;<%mail_current_out_address()%>&gt;</div>
+
+          <div :class="app_mail.detail_mail.io">
+            <div class="title">
+              Subject: <%app_mail.detail_mail.title%>
+            </div>
+
+            <div class="body text_drag" v-html="app_mail.detail_mail.content">
+            </div>
+
+            <span v-if="app_mail.detail_mail.attatch.length > 0" class="attachment_signal">
+              <img src="./image/mail/mail_attach.svg" />
+              <%app_mail.detail_mail.attatch.length%> Attachment(s):
+            </span>
+            <span v-for="(d, i) in app_mail.detail_mail.attatch" @click="mail_download_attachment(d)"
+              class="attachments">
+              <img src="./image/notif/notifs_download.svg" />
+              <%d.get_fullname()%>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="mail_reply" @click="request_hint()" v-if="hints.mode && get_available_hints_count() > 0">
+        <img src="./image/mail/mail_send.svg" />
+        <div class="button_text">Ask</div>
+      </div>
+      <div class="mail_reply disabled" v-else-if="hints.mode">
+        <img src="./image/mail/mail_send.svg" />
+        <div class="button_text">Ask</div>
+      </div>
+      <div class="mail_reply" @click="mail_reply()" v-else-if="mail_current_out_address()">
+        <img src="./image/mail/mail_reply.svg" />
+        <div class="button_text">Reply</div>
+      </div>
+    </div>
+
+    <div class="app_body_content" id="mail_write" v-else>
+      <div class="mail_write_input_1">
+        <div class="label">To</div><input type="text" autocomplete="off" id="mail_write_to"
+          :value="app_mail.mail_contacts.filter(function(e) { return e.name == app_mail.mail_write_to; })[0].account"
+          v-if="app_mail.mail_write_to" @change="mail_save_temp()" />
+        <input type="text" id="mail_write_to" @change="mail_save_temp()" :value="app_mail.mail_write_data.to" v-else>
+      </div>
+      <div class="mail_write_input_1">
+        <div class="label">Subject</div><input type="text" autocomplete="off" id="mail_write_title"
+          @change="mail_save_temp()" :value="app_mail.mail_write_data.title" />
+      </div>
+      <div class="mail_write_input_1">
+        <div class="label">Attach files</div>
+        <div class="attachment droppable">
+          <span v-for="a in app_mail.mail_write_data.attachment">
+            <%a.file.get_fullname()%>
+          </span>
+        </div>
+      </div>
+      <div class="mail_write_input_2">
+        <textarea class="mail_content_body" id="mail_write_body"
+          @change="mail_save_temp()"><%app_mail.mail_write_data.desc%></textarea>
+      </div>
+      <div class="mail_write_buttons">
+        <div class="discard" @click="mail_discard_write()">Cancel</div>
+        <div class="confirm" @click="mail_send()">
+          <img src="./image/mail/mail_send.svg" />
+          <div class="button_text">Send</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!--6. explorer-->
+  <div id="app_explorer" v-if="visibility.app_explorer" class="app_frame explorer" @click="activate_app('explorer')"
+    @dragstart="activate_app('explorer')">
+    <div class="app_title_bar">
+      <div class="app_title_icon">
+        <img src="./image/desktop/desktop_computer.svg" />
+      </div>
+      <div class="app_title_name">
+        File Explorer
+      </div>
+      <div class="app_title_control">
+        <div class="app_minimize" @click="minimize_app('explorer')">
+          <img src="./image/app/app_minimize.svg" />
+        </div>
+        <div class="app_close" @click="close_app('explorer')">
+          <img src="./image/app/app_close.svg" />
+        </div>
+      </div>
+    </div>
+
+    <div class="app_head">
+      <div class="explorer_address_wrap">
+        <!--여기 아이콘으로 모두 바꿔주기!-->
+        <div class="explorer_history">
+          <div class="explorer_history_button" @click="explorer_history_move('back')"
+            :data-available="app_explorer.pivot > 0">
+            <img src="./image/app/app_leftarrow.svg" />
+          </div>
+          <div class="explorer_history_button" @click="explorer_history_move('forward')"
+            :data-available="app_explorer.pivot < app_explorer.history.length - 1">
+            <img src="./image/app/app_rightarrow.svg" />
+          </div>
+          <div class="explorer_history_button" @click="explorer_history_move('up')"
+            :data-available="app_explorer.history[app_explorer.pivot].get_parent() != null">
+            <img src="./image/app/app_uparrow.svg" />
+          </div>
+        </div>
+        <div class="explorer_address">
+          <input type="text" autocomplete="off" id="address_box"
+            :value="app_explorer.history[app_explorer.pivot].get_path()" readonly />
+        </div>
+        <div class="explorer_toolbox">
+          <div class="explorer_tool" @click="explorer_copy_items()"
+            v-if="is_admin && app_explorer.current_selected.length > 0 && app_explorer.is_copiable">
+            Copy
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Copy
+          </div>
+
+          <div class="explorer_tool" @click="explorer_cut_items()"
+            v-if="is_admin && app_explorer.current_selected.length > 0 && app_explorer.file_running && app_explorer.is_copiable && app_explorer.is_removable">
+            Cut
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Cut
+          </div>
+
+          <div class="explorer_tool" @click="explorer_paste_items(app_explorer.history[app_explorer.pivot])"
+            v-if="is_admin && app_explorer.clipboard.length > 0 && app_explorer.file_running">
+            Paste
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Paste
+          </div>
+
+          <div class="explorer_tool" @click="explorer_compress()"
+            v-if="app_explorer.current_selected.length != 0 && app_explorer.file_running">
+            Compress
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Compress
+          </div>
+
+          <div class="explorer_tool" @click="explorer_extract()"
+            v-if="app_explorer.current_selected.length == 1 && app_explorer.current_selected[0].original_extension == 'zip' && app_explorer.file_running">
+            Extract
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Extract
+          </div>
+
+          <div class="explorer_tool" @click="explorer_rename()"
+            v-if="is_admin && explorer_name_changeable() && app_explorer.file_running">
+            Rename
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Rename
+          </div>
+
+          <div class="explorer_tool" @click="explorer_remove()"
+            v-if="is_admin && app_explorer.current_selected.length > 0 && app_explorer.file_running && app_explorer.is_removable">
+            Delete
+          </div>
+          <div class="explorer_tool" v-else data-disabled="true">
+            Delete
+          </div>
+        </div>
+      </div>
+      <div class="explorer_view_option_wrap">
+        <div @click="explorer_toggle_view('ext')">
+          <span v-if="app_explorer.show_ext">■</span>
+          <span v-else>□</span>
+          Extensions
+        </div>
+        <div @click="explorer_toggle_view('hidden')">
+          <span v-if="app_explorer.show_hidden">■</span>
+          <span v-else>□</span>
+          Hidden Items
+        </div>
+        <div>Show/Hide</div>
+      </div>
+
+    </div>
+
+    <div class="app_body">
+      <div class="explorer_body_sidebar">
+        <!--이 영역에서 아래 두개 항목 아이콘 업데이트 필요함-->
+        <!--||app_explorer.history[app_explorer.pivot].get_path_obj().includes(fld)-->
+        <div class="app_sidebar_item" v-for="fld in app_explorer.current_tree"
+          v-if="fld.is_par_tree_visible() && !fld.removed && ( !fld.hidden || (fld.hidden && app_explorer.show_hidden) )"
+          :data-depth="fld.get_depth()" :data-selected="fld == app_explorer.history[app_explorer.pivot]">
+          <div class="tree_toggle" @click="fld.toggle_in_tree()">
+            <span v-if="!fld.has_subdir()"></span>
+            <span v-else-if="fld.is_tree_visible()">
+              <img src="./image/app/simple_down.svg" />
+            </span>
+            <span v-else>
+              <img src="./image/app/simple_right.svg" />
+            </span>
+          </div>
+          <div class="icon" @click="explorer_move_to(fld)">
+            <img :src="fld.get_icon()" />
+          </div>
+          <div class="desc" @click="explorer_move_to(fld)">
+            <span class="name">
+              <%fld.name%>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="explorer_body_content" @click="explorer_deselect_all($event)">
+        <table id="explorer_dir_list">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Date Modified</th>
+              <th>Type</th>
+              <th>Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in app_explorer.history[app_explorer.pivot].get_childs()" class="explorer_file_list_item"
+              v-if="!d.removed && ( !d.hidden || (d.hidden && app_explorer.show_hidden) )"
+              @click="explorer_toggle_select_item(d, $event)" :data-cut="app_explorer.clipboard_cut.indexOf(d)>0"
+              :id="'explorer_'+d.name.trim_all()" :data-selected="explorer_item_is_selected(d)">
+              <td v-if="d.constructor.name=='Folder'" @dblclick="explorer_open_folder(d)" class="name"><img
+                  :src="d.get_icon()" class="icon" />
+                <%d.name%>
+              </td>
+              <td v-else-if="app_explorer.file_running" @dblclick="explorer_open_file(d)" class="name">
+                <span class="explorer_drag_item" :data-name="d.name">
+                  <img :src="d.get_icon()" class="icon" />
+                  <%d.name%><span v-if="app_explorer.show_ext">.<%d.extension%></span>
+                </span>
+              </td>
+              <td v-else class="name">
+                <span :data-name="d.name" class="explorer_nondrag_item">
+                  <img :src="d.get_icon()" class="icon" />
+                  <%d.name%><span v-if="app_explorer.show_ext">.<%d.extension%></span>
+                </span>
+              </td>
+              <td class="date">
+                <%d.mod_date%>
+              </td>
+              <td class="type">
+                <%d.get_filetype()%>
+              </td>
+              <td v-if="d.constructor.name=='File'" class="size">
+                <%d.get_size_value()%>
+              </td>
+              <td v-else class="size">--</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!--6-1 name change alert-->
+  <div class="alert_wrap" id="explorer_rename" v-if="app_explorer.rename_mode">
+    <div class="alert_background"></div>
+    <div class="alert_frame">
+      <div class="alert_title_bar">
+        <div class="alert_title_name">
+          Rename
+        </div>
+        <div class="alert_title_control">
+          <div class="alert_close" @click="alert_cancel('explorer', 'rename_mode')">
+            <img src="./image/app/app_close.svg" />
+          </div>
+        </div>
+      </div>
+      <div class="alert_body">
+        Enter a new name.<br /><br />
+        <input type="text" autocomplete="off" id="explorer_name_to_change" class="explorer_name_change_box"
+          :value="explorer_get_curr_name()" />
+        <br /><br />
+        <span v-if="app_explorer.rename_dup">
+          A duplicated name already exists.
+        </span>
+        <div class="alert_buttons">
+          <div class="discard" @click="alert_cancel('explorer', 'rename_mode')">Cancel</div>
+          <div class="confirm" @click="explorer_confirm_rename()">Confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--6-2 explorer alert 2: filetype-->
+  <div class="alert_wrap" id="inspector" v-if="app_explorer.wrong_filetype">
+    <div class="alert_background"></div>
+    <div class="alert_frame">
+      <div class="alert_title_bar">
+        <div class="alert_title_name">
+          Warning
+        </div>
+        <div class="alert_title_control">
+          <div class="alert_close" @click="alert_cancel('explorer', 'wrong_filetype')">
+            <img src="./image/app/app_close.svg" />
+          </div>
+        </div>
+      </div>
+      <div class="alert_body">
+        <img src="./image/inspector/inspector_fail.svg" />Unable to open this file.
+        <div class="alert_buttons">
+          <div class="confirm" @click="alert_cancel('explorer', 'wrong_filetype')">Confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--6-3 explorer alert 3: cannot open-->
+  <div class="alert_wrap" id="inspector" v-if="app_explorer.cant_open">
+    <div class="alert_background"></div>
+    <div class="alert_frame">
+      <div class="alert_title_bar">
+        <div class="alert_title_name">
+          Error
+        </div>
+        <div class="alert_title_control">
+          <div class="alert_close" @click="alert_cancel('explorer', 'cant_open')">
+            <img src="./image/app/app_close.svg" />
+          </div>
+        </div>
+      </div>
+      <div class="alert_body">
+        <img src="./image/inspector/inspector_fail.svg" />Unable to open this file.
+        <div class="alert_buttons">
+          <div class="confirm" @click="alert_cancel('explorer', 'cant_open')">Confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--6-4 ask_password alert-->
+  <div class="alert_wrap" id="explorer_ask_password" v-if="app_explorer.ask_password">
+    <div class="alert_background"></div>
+    <div class="alert_frame">
+      <div class="alert_title_bar">
+        <div class="alert_title_name">
+          Locked Folder
+        </div>
+        <div class="alert_title_control">
+          <div class="alert_close" @click="alert_cancel('explorer', 'ask_password')">
+            <img src="./image/app/app_close.svg" />
+          </div>
+        </div>
+      </div>
+      <div class="alert_body">
+        Please enter password to access to folder.<br /><br />
+        <input type="password" autocomplete="off" id="explorer_folder_password" class="explorer_name_change_box"
+          @keyup="explorer_move_to_secure_by_enter($event)" />
+        <br /><br />
+        <span v-if="app_explorer.wrong_password">
+          Incorrect password. Password is case-sensitive.
+        </span>
+        <div class="alert_buttons">
+          <div class="discard" @click="alert_cancel('explorer', 'ask_password')">Cancel</div>
+          <div class="confirm" @click="explorer_move_to_secure()">Confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--7. web browser-->
+  <div id="app_browser" v-if="visibility.app_browser" class="app_frame browser" @click="activate_app('browser')"
+    @dragstart="activate_app('browser')">
+    <div class="app_title_bar">
+      <div class="app_title_control">
+        <div class="app_minimize" @click="minimize_app('browser')">
+          <img src="./image/app/app_minimize.svg" />
+        </div>
+        <div class="app_close" @click="close_app('browser')">
+          <img src="./image/app/app_close.svg" />
+        </div>
+      </div>
+    </div>
+    <div class="browser_head">
+      <div class="browser_history_move">
+        <div @click="browser_history_move('b')"
+          v-if="app_browser.tabs[app_browser.current_tab_pivot].current_pivot > 0">
+          <img src="./image/app/app_leftarrow.svg" />
+        </div>
+        <div v-else data-disabled="true">
+          <img src="./image/app/app_leftarrow.svg" />
+        </div>
+        <div @click="browser_history_move('f')"
+          v-if="app_browser.tabs[app_browser.current_tab_pivot].history.length - 1 > app_browser.tabs[app_browser.current_tab_pivot].current_pivot">
+          <img src="./image/app/app_rightarrow.svg" />
+        </div>
+        <div v-else data-disabled="true">
+          <img src="./image/app/app_rightarrow.svg" />
+        </div>
+      </div>
+      <div class="browser_tabs_wrap">
+        <div class="browser_tab" v-for="(tab, i) in app_browser.tabs" @click="browser_select_tab(i)"
+          :data-current="i == app_browser.current_tab_pivot">
+          <% tab.name %>
+        </div>
+        <div class="browser_vpn_icon" v-if="has_plugin('VPN.plg')">
+          <img src="./image/web/vpn.svg" />
+        </div>
+      </div>
+    </div>
+    <div class="app_body">
+      <div class="app_activator" v-if="!app_active.app_browser" @click="activate_app('browser')"></div>
+      <div class="browser_body_content wrong_content" id="browser_body_wrap" v-if="app_browser.wrong_permission">
+        <span class="emphasis">Access Denied!</span>
+        <span class="desc">Cannot connect to external network.</span>
+      </div>
+      <div class="browser_body_content" id="browser_body_wrap" v-else>
+        <iframe :src="app_browser.in_iframe" @load="browser_update_history()" id="browser_iframe"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!--8. file inspect-->
+  <div id="app_inspector" v-if="visibility.app_inspector" class="app_frame inspector" @click="activate_app('inspector')"
+    @dragstart="activate_app('inspector')">
+    <div class="app_title_bar">
+      <div class="app_title_icon">
+        <img src="./image/inspector/inspector_icon.svg" />
+      </div>
+      <div class="app_title_name">
+        EDF Inspector
+      </div>
+      <div class="app_title_control">
+        <div class="app_minimize" @click="minimize_app('inspector')">
+          <img src="./image/app/app_minimize.svg" />
+        </div>
+        <div class="app_close" @click="__inspector_before_close()">
+          <img src="./image/app/app_close.svg" />
+        </div>
+
+      </div>
+    </div>
+    <div class="app_body">
+      <div class="inspector_body_sidebar">
+        <!--이 영역에서 '설정' 항목 아이콘 업데이트 필요함-->
+        <div class="app_sidebar_item" @click="inspector_default_mode()"
+          :data-selected="app_inspector.mode == 'default'">
+          <div class="icon"><img src="./image/inspector/inspector_inspect.svg" /></div>
+          <div class="desc">
+            <span class="name">Verify Files</span>
+          </div>
+        </div>
+        <div class="app_sidebar_item" v-if="is_admin && app_inspector.decrypt_enabled" @click="inspector_decrypt_mode()"
+          :data-selected="app_inspector.mode == 'decrypt'">
+          <div class="icon"><img src="./image/inspector/inspector_decrypt.svg" /></div>
+          <div class="desc">
+            <span class="name">Decode Files</span>
+          </div>
+        </div>
+        <div class="app_sidebar_item at_bottom2" v-if="is_admin && has_plugin('inspector_config.plg')"
+          @click="inspector_setting_mode()" :data-selected="app_inspector.mode == 'setting'">
+          <div class="icon"><img src="./image/inspector/inspector_settings.svg" /></div>
+          <div class="desc">
+            <span class="name">Settings</span>
+          </div>
+        </div>
+        <div class="app_sidebar_item at_bottom" v-if="is_admin" @click="inspector_admin_mode()"
+          :data-selected="app_inspector.mode == 'admin'">
+          <div class="icon"><img src="./image/inspector/inspector_devtools.svg" /></div>
+          <div class="desc">
+            <span class="name">Developer Tools</span>
+          </div>
+        </div>
+
+      </div>
+      <!--default mode-->
+      <div class="inspector_body_content" id="inspector_body_wrap" v-if="app_inspector.mode == 'default'">
+        <div class="inspector_body_title">
+          Verifying file list.
+        </div>
+        <div class="inspector_body_desc">
+          Drag files here for verification
+        </div>
+        <div class="inspector_file_list">
+          <table id="inspector_files">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Progress</th>
+                <th></th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(f, idx) in app_inspector.inspected_data" class="inspected">
+                <td class="name">
+                  <%f.file.get_fullname()%>
+                </td>
+                <td class="status" :data-status="f.result">
+                  <div class="status_bar_wrap" :data-inspectable="true">
+                    <div :class="'status_bar '+f.result" :data-order="idx"></div>
+                  </div>
+                </td>
+                <!--아이콘 넣어주기-->
+                <td class="result_icon" v-if="f.result=='done'">
+                  <img src="./image/inspector/inspector_success.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='changed'">
+                  <img src="./image/inspector/inspector_changed.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='failed'">
+                  <img src="./image/inspector/inspector_fail.svg" />
+                </td>
+                <td class="result_icon" v-else></td>
+                <!--검사 상태-->
+                <td class="result" v-if="f.result=='locked'" :data-res="f.result">Locked</td>
+                <td class="result" v-else-if="f.result=='done'" :data-res="f.result">Finished</td>
+                <td class="result" v-else-if="f.result=='changed'" :data-res="f.result">Modified</td>
+                <td class="result" v-else-if="f.result=='failed'" :data-res="f.result">Failed</td>
+                <td class="result" v-else-if="f.result=='ongoing'" :data-res="f.result">Verifying</td>
+                <td class="result" v-else :data-res="f.result">Pending</td>
+              </tr>
+              <tr v-for="(f, idx) in app_inspector.inspection_data">
+                <td class="name">
+                  <%f.file.get_fullname()%>
+                </td>
+                <td class="status" :data-status="f.result">
+                  <div class="status_bar_wrap" :data-inspectable="true">
+                    <div class="status_bar" :data-order="idx"></div>
+                  </div>
+                </td>
+                <!--아이콘 넣어주기-->
+                <td class="result_icon" v-if="f.result=='done'">
+                  <img src="./image/inspector/inspector_success.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='changed'">
+                  <img src="./image/inspector/inspector_changed.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='failed'">
+                  <img src="./image/inspector/inspector_fail.svg" />
+                </td>
+                <td class="result_icon" v-else></td>
+                <!--검사 상태-->
+                <td class="result" v-if="f.result=='locked'" :data-res="f.result">Locked</td>
+                <td class="result" v-else-if="f.result=='done'" :data-res="f.result">Finished</td>
+                <td class="result" v-else-if="f.result=='changed'" :data-res="f.result">Modified</td>
+                <td class="result" v-else-if="f.result=='failed'" :data-res="f.result">Failed</td>
+                <td class="result" v-else-if="f.ongoing" :data-res="f.result">Verifying</td>
+                <td class="result" v-else :data-res="f.result">Pending</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="inspector_buttons">
+          <!--여기 아이콘들 넣어줘야 함!!-->
+          <div class="confirm2" @click="inspector_flush()" v-if="app_inspector.inspected_data.length > 0">OK</div>
+
+          <div class="discard" v-if="app_inspector.available && app_inspector.inspection_data.length == 0">Check</div>
+          <div class="confirm" @click="inspector_start()"
+            v-else-if="app_inspector.available && app_inspector.inspection_data.length > 0">Check</div>
+          <div class="discard" v-else-if="!app_inspector.available">Pending</div>
+        </div>
+      </div>
+
+      <!--2 decrypt mode-->
+      <div class="inspector_body_content" id="inspector_body_wrap" v-if="app_inspector.mode == 'decrypt'">
+        <div class="inspector_body_title">
+          Decoding file list
+        </div>
+        <div class="inspector_body_desc">
+          Drag files here for decoding.
+        </div>
+        <div class="inspector_file_list">
+          <table id="inspector_files">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Progress</th>
+                <th></th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(f, idx) in app_inspector.inspected_data" class="inspected">
+                <td class="name">
+                  <%f.file.get_fullname()%>
+                </td>
+                <td class="status" :data-status="f.result">
+                  <div class="status_bar_wrap" :data-inspectable="true">
+                    <div :class="'status_bar '+f.result" :data-order="idx"></div>
+                  </div>
+                </td>
+                <!--아이콘 넣어주기-->
+                <td class="result_icon" v-if="f.result=='done'">
+                  <img src="./image/inspector/inspector_success.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='changed'">
+                  <img src="./image/inspector/inspector_changed.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='failed'">
+                  <img src="./image/inspector/inspector_fail.svg" />
+                </td>
+                <td class="result_icon" v-else></td>
+                <!--검사 상태-->
+                <td class="result" v-if="f.result=='locked'" :data-res="f.result">Locked</td>
+                <td class="result" v-else-if="f.result=='done'" :data-res="f.result">Finished</td>
+                <td class="result" v-else-if="f.result=='changed'" :data-res="f.result">Modified</td>
+                <td class="result" v-else-if="f.result=='failed'" :data-res="f.result">Failed</td>
+                <td class="result" v-else-if="f.result=='ongoing'" :data-res="f.result">Decoding</td>
+                <td class="result" v-else :data-res="f.result">Pending</td>
+              </tr>
+              <tr v-for="(f, idx) in app_inspector.inspection_data">
+                <td class="name">
+                  <%f.file.get_fullname()%>
+                </td>
+                <td class="status" :data-status="f.result">
+                  <div class="status_bar_wrap" :data-inspectable="true">
+                    <div class="status_bar" :data-order="idx"></div>
+                  </div>
+                </td>
+                <!--아이콘 넣어주기-->
+                <td class="result_icon" v-if="f.result=='done'">
+                  <img src="./image/inspector/inspector_success.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='changed'">
+                  <img src="./image/inspector/inspector_changed.svg" />
+                </td>
+                <td class="result_icon" v-else-if="f.result=='failed'">
+                  <img src="./image/inspector/inspector_fail.svg" />
+                </td>
+                <td class="result_icon" v-else></td>
+                <!--검사 상태-->
+                <td class="result" v-if="f.result=='locked'" :data-res="f.result">Locked</td>
+                <td class="result" v-else-if="f.result=='done'" :data-res="f.result">Finished</td>
+                <td class="result" v-else-if="f.result=='changed'" :data-res="f.result">Modified</td>
+                <td class="result" v-else-if="f.result=='failed'" :data-res="f.result">Failed</td>
+                <td class="result" v-else-if="f.ongoing" :data-res="f.result">Decoding</td>
+                <td class="result" v-else :data-res="f.result">Pending</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="inspector_buttons">
+          <!--여기 아이콘들 넣어줘야 함!!-->
+          <div class="confirm2" @click="inspector_flush()" v-if="app_inspector.inspected_data.length > 0">OK</div>
+
+          <div class="discard" v-if="app_inspector.available && app_inspector.inspection_data.length == 0">Check</div>
+          <div class="confirm" @click="inspector_start()"
+            v-else-if="app_inspector.available && app_inspector.inspection_data.length > 0">Check</div>
+          <div class="discard" v-else-if="!app_inspector.available">Pending</div>
+        </div>
+      </div>
+
+      <!--3 setting mode-->
+      <div class="inspector_body_content" id="inspector_body_wrap"
+        v-if="app_inspector.mode == 'setting' && is_admin && has_plugin('inspector_config.plg')">
+        <div class="inspector_body_title">
+          Settings
+        </div>
+        <div class="inspector_file_list">
+          <div class="inspector_caution">
+            [Caution] To upgrade version, please enter full names of the fields below</br>(except the inspector
+            version).
+          </div>
+          <div class="inspector_input">
+            <label>Developer Name</label><input type="text" autocomplete="off" id="inspector_setting_developer" />
+          </div>
+          <div class="inspector_input">
+            <label>Project Name</label><input type="text" autocomplete="off" id="inspector_setting_project" />
+          </div>
+          <div class="inspector_input">
+            <label>Inspector Ver.</label><input type="text" autocomplete="off" id="inspector_setting_version" />
+          </div>
+        </div>
+        <div class="inspector_buttons">
+          <!--여기 아이콘들 넣어줘야 함!!-->
+          <div class="inspector_wrong_message" v-if="app_inspector.setting_wrong.length > 0">
+            Error: <%app_inspector.setting_wrong.join(', ')%>
+        </div>
+        <div class="inspector_wrong_message" v-if="about_to_ending4">
+          🈲🈲🈲🈲🈲🈲🈲
+        </div>
+        <div class="confirm2" @click="inspector_enable_decryption()">Save</div>
+      </div>
+    </div>
+    
+    <div class="inspector_body_content" id="inspector_body_wrap" v-else-if="app_inspector.mode == ' setting' &&
+              is_admin && !has_plugin('inspector_config.plg')">
+              <div class="inspector_body_title">
+                <br /><br /><br />
+                Please select a tool from the menu.
+              </div>
+          </div>
+
+          <!--4 admin mode-->
+          <div class="inspector_body_content" id="inspector_body_wrap" v-if="app_inspector.mode == 'admin'">
+            <div class="inspector_body_title">
+              Program version list
+            </div>
+            <div class="inspector_file_list">
+              <table id="inspector_files">
+                <thead>
+                  <tr>
+                    <th>Developer</th>
+                    <th>Version</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(f, idx) in app_inspector.development_data" class="inspected">
+                    <td class="name">
+                      <%f.name%>
+                    </td>
+                    <td class="name">
+                      <%f.version%>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!--8-1 inspector alert 1: permission-->
+      <div class="alert_wrap" id="inspector" v-if="app_inspector.wrong_permision">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              Access Denied
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('inspector', 'wrong_permission')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            <img src="./image/inspector/inspector_fail.svg" /> You are not allowed to access the developer mode.
+            <div class="alert_buttons">
+              <div class="confirm" @click="alert_cancel('inspector', 'wrong_permission')">Confirm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--8-2 inspector alert 2: wrong file type-->
+      <div class="alert_wrap" id="inspector" v-if="app_inspector.wrong_filetype">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              Error
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('inspector', 'wrong_filetype')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            <img src="./image/inspector/inspector_fail.svg" /> Only EDF format files can be verified.
+            <div class="alert_buttons">
+              <div class="confirm" @click="alert_cancel('inspector', 'wrong_filetype')">Confirm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--8-2 inspector alert 2: while inspecting type-->
+      <div class="alert_wrap" id="inspector" v-if="app_inspector.while_inspecting">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              Error
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('inspector', 'while_inspecting')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            <img src="./image/inspector/inspector_fail.svg" />Cannot interrupt verification process.
+            <div class="alert_buttons">
+              <div class="confirm" @click="alert_cancel('inspector', 'while_inspecting')">Confirm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--9. Reader-->
+      <div id="app_reader" v-if="visibility.app_reader" class="app_frame reader" @click="activate_app('reader')"
+        @dragstart="activate_app('reader')">
+        <div class="app_title_bar">
+          <div class="app_title_icon">
+            <img src="./image/desktop/desktop_viewer.svg" />
+          </div>
+          <div class="app_title_name" v-if="app_reader.file">
+            <%app_reader.file.get_fullname()%>
+          </div>
+          <div class="app_title_name" v-else>
+            File Viewer
+          </div>
+          <div class="app_title_control">
+            <div class="app_minimize" @click="minimize_app('reader')">
+              <img src="./image/app/app_minimize.svg" />
+            </div>
+            <div class="app_close" @click="close_app('reader')">
+              <img src="./image/app/app_close.svg" />
+            </div>
+          </div>
+        </div>
+        <div class="app_body">
+          <div class="reader_body_content" id="reader_body_wrap">
+            <div class="no_file" v-if="!app_reader.file">
+              <span class="msg">Drag file here to open.</span>
+            </div>
+            <div class="wrong_file" v-else-if="!app_reader.file.check_original()">
+              <span class="msg">Cannot read file.<br />Drag file here to open.</span>
+            </div>
+            <div class="edf_file" v-else-if="app_reader.file.extension == 'edf'">
+              <div class="edf_info_box">
+                <div class="edf_info_item">
+                  <div class="term">Name</div>
+                  <div class="info">
+                    <%app_reader.file.content.name%>
+                  </div>
+                </div>
+                <div class="edf_info_item">
+                  <div class="term">Gender</div>
+                  <div class="info">
+                    <%app_reader.file.content.gender%>
+                  </div>
+                </div>
+                <div class="edf_info_item">
+                  <div class="term">Nationality</div>
+                  <div class="info">
+                    <%app_reader.file.content.nationality%>
+                  </div>
+                </div>
+                <div class="edf_info_item">
+                  <div class="term">Date of Birth</div>
+                  <div class="info">
+                    <%app_reader.file.content.birthday%>
+                  </div>
+                </div>
+                <div class="edf_info_item">
+                  <div class="term">Phone Number</div>
+                  <div class="info">
+                    <%app_reader.file.content.phone%>
+                  </div>
+                </div>
+                <div class="edf_info_item">
+                  <div class="term">Verification Status</div>
+                  <!--여기서부터 검사 여부 아이콘들 들어가야 함-->
+                  <!--info_ins 클래스는 다른 애들보다 padding-left 가 29 적음 24+5-->
+                  <div class="info_ins" v-if="app_reader.file.inspected && app_reader.file.modified">
+                    <img src="./image/inspector/inspector_changed.svg" />Modified
+                  </div>
+                  <div class="info_ins" v-else-if="app_reader.file.inspected && !app_reader.file.modified">
+                    <img src="./image/inspector/inspector_success.svg" />Complete
+                  </div>
+                  <div class="info" v-else>
+                    Incomplete
+                  </div>
+                </div>
+              </div>
+              <div class="edf_desc_box" v-html="app_reader.file.content.desc">
+              </div>
+            </div>
+            <div class="jpg_file" v-else-if="app_reader.file.extension == 'jpg'">
+              <img :src="app_reader.file.content" />
+            </div>
+            <div class="txt_file" v-else-if="app_reader.file.extension == 'txt'" v-html="app_reader.file.content"></div>
+            <div class="wrong_file" v-else>
+              <span class="msg">Cannot read file.<br />Drag file here to open.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!--6-4 ask_password alert-->
+      <div class="alert_wrap" id="reader_ask_password" v-if="app_reader.ask_password">
+        <div class="alert_background"></div>
+        <div class="alert_frame">
+          <div class="alert_title_bar">
+            <div class="alert_title_name">
+              Locked File
+            </div>
+            <div class="alert_title_control">
+              <div class="alert_close" @click="alert_cancel('reader', 'ask_password')">
+                <img src="./image/app/app_close.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="alert_body">
+            Enter password to open this file.<br /><br />
+            <input type="password" autocomplete="off" id="reader_file_password" class="explorer_name_change_box"
+              @keyup="reader_open_secure_by_enter($event)" />
+            <br /><br />
+            <span v-if="app_reader.wrong_password">
+              Incorrect password. Password is case-sensitive.
+            </span>
+            <div class="alert_buttons">
+              <div class="discard" @click="alert_cancel('reader', 'ask_password')">Cancel</div>
+              <div class="confirm" @click="reader_open_secure()">Confirm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--10. bin-->
+      <div id="app_bin" v-if="is_admin && visibility.app_bin" class="app_frame explorer" @click="activate_app('bin')"
+        @dragstart="activate_app('bin')">
+        <div class="app_title_bar">
+          <div class="app_title_icon">
+            <img src="./image/desktop/desktop_bin.svg" />
+          </div>
+          <div class="app_title_name">
+            Recycle Bin
+          </div>
+          <div class="app_title_control">
+            <div class="app_minimize" @click="minimize_app('bin')">
+              <img src="./image/app/app_minimize.svg" />
+            </div>
+            <div class="app_close" @click="close_app('bin')">
+              <img src="./image/app/app_close.svg" />
+            </div>
+          </div>
+        </div>
+
+        <div class="app_head">
+          <div class="explorer_address_wrap">
+            <div class="explorer_address">
+              <input type="text" autocomplete="off" id="address_box" value="Recycle Bin" readonly />
+            </div>
+            <div class="explorer_toolbox">
+              <div class="explorer_tool" @click="bin_empty()">
+                Empty
+              </div>
+
+              <div class="explorer_tool" @click="bin_recover()" v-if="app_bin.current_selected.length > 0">
+                Recover
+              </div>
+              <div class="explorer_tool" v-else data-disabled="true">
+                Recover
+              </div>
+
+              <div class="explorer_tool" @click="bin_perma_delete()" v-if="app_bin.current_selected.length > 0">
+                Delete
+              </div>
+              <div class="explorer_tool" v-else data-disabled="true">
+                Delete
+              </div>
+
+            </div>
+          </div>
+          <div class="explorer_view_option_wrap">
+            <div @click="explorer_toggle_view('ext')">
+              <span v-if="app_explorer.show_ext">■</span>
+              <span v-else>□</span>
+              Extensions
+            </div>
+            <div @click="explorer_toggle_view('hidden')">
+              <span v-if="app_explorer.show_hidden">■</span>
+              <span v-else>□</span>
+              Hidden Items
+            </div>
+            <div>Show/Hide</div>
+          </div>
+
+        </div>
+
+        <div class="app_body">
+          <div class="explorer_body_sidebar">
+            <div class="app_sidebar_item">
+              <div class="tree_toggle">
+              </div>
+              <div class="icon">
+                <img src="./image/desktop/desktop_bin.svg" /><!--여기에 휴지통 아이콘 넣어주세요-->
+              </div>
+              <div class="desc">
+                <span class="name">Recycle Bin</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="explorer_body_content" @click="bin_deselect_all($event)">
+            <table id="bin_dir_list">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Date Modified</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in app_bin.files" class="explorer_file_list_item"
+                  v-if="!d.removed_permanent && ( !d.hidden || (d.hidden && app_explorer.show_hidden) )"
+                  @click="bin_toggle_select_item(d, $event)" :id="'bin_'+d.name.trim_all()">
+                  <td v-if="d.constructor.name=='Folder'" class="name"><img :src="d.get_icon()" class="icon" />
+                    <%d.name%>
+                  </td>
+                  <td v-else class="name">
+                    <span class="explorer_drag_item" :data-name="d.name">
+                      <img :src="d.get_icon()" class="icon" />
+                      <%d.name%><span v-if="app_explorer.show_ext">.<%d.extension%></span>
+                    </span>
+                  </td>
+                  <td class="date">
+                    <%d.mod_date%>
+                  </td>
+                  <td class="type">
+                    <%d.get_filetype()%>
+                  </td>
+                  <td v-if="d.constructor.name=='File'" class="size">
+                    <%d.get_size_value()%>
+                  </td>
+                  <td v-else class="size">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+
+      <!--1-1. while sleeping-->
+      <transition name="fade">
+        <div id="phase1_ending" class="os_frame" v-if="is_sleeping && ending == 'phase1'">
+          <div class="sleeping_message">
+            <pre class=title>
+> Ending 1 of 4
+> Cog in the wheel
+</pre>
+            <pre class="desc">
+> Another day has passed.
+> Thanks to your effort, PTNP contributed to a better world, as always.
+> … Though you’ve done what you were told to do.
+> That would be all, for a worker.
+> Good job.
+</pre>
+            <button @click="os_force_shutdown();"><img src="./image/welcome/power_off.png" /></button>
+          </div>
+        </div>
+        <div id="phase2_ending" class="os_frame" v-else-if="is_sleeping && ending == 'phase2'">
+          <div class="sleeping_message">
+            <pre class=title>
+> Ending 2 of 4
+> Every Play has an End
+</pre>
+            <pre class="desc">
+> Jeremy Foucault once promised to free the world from the tyranny 
+  of the Government
+> He also, was a hypocrite.
+> Jeremy Foucault’s Play is over and PNTP has collapsed.
+> But on the stage where the hypocrisy had come down, the shadows of 
+  the Government were casting again
+</pre>
+            <button @click="os_force_shutdown();"><img src="./image/welcome/power_off.png" /></button>
+          </div>
+        </div>
+        <div id="phase3_ending" class="os_frame" v-else-if="is_sleeping && ending == 'phase3'">
+          <div class="sleeping_message">
+            <pre class=title>
+> Ending 3 of 4
+> Blind Happiness
+</pre>
+            <pre class="desc">
+> You were enlightened by Foucault’s idea rather than worrying the 
+  demise of the system it has bring upon.
+> After refusing the temptation and erasing the problematic data, you 
+  reported the presence of Mike to the company committee.
+> The Government’s plan has failed once again, and the people are still, 
+  happy.
+> The truth behind this happiness will never be revealed.
+> Never.
+</pre>
+            <button @click="os_force_shutdown();"><img src="./image/welcome/power_off.png" /></button>
+          </div>
+        </div>
+        <div id="phase3_ending" class="os_frame" v-else-if="is_sleeping && ending == 'phase4'">
+          <div class="sleeping_message">
+            <pre class=title>
+> Ending 4 of 4
+> Thank you for Playing.
+</pre>
+            <pre class="desc">
+> Dear participant, thank you for participating in this experiment.
+> I am Mike, and I planned this game and experiment.
+> First of all, congratulations on watching this Ending.
+> We face many choices throughout our lives.
+> In a lot of cases, we tend to make decisions by fitting ourselves 
+  to the environment and what the others provide rather than based 
+  on our own will.
+> However, you didn’t.
+> You stepped out of the given box and made the choice of your own. 
+> And that was what I wanted to see in this experiment.
+> I can dare say that this experiment proved its meaning because of 
+  the results you showed, and I thank you greatly for that.
+> Thank you.
+</pre>
+            <button @click="os_force_shutdown();"><img src="./image/welcome/power_off.png" /></button>
+          </div>
+        </div>
+        <div id="sleeping_screen" class="os_frame" v-else-if="is_sleeping">
+          <div class="sleeping_message">
+            <span v-if="ending != 'phase2'"><br />Shake to Wake!</span>
+            <span v-if="ending == 'phase2'">Wow! Congrats! It's done, and you know the truth!</span>
+          </div>
+        </div>
+      </transition>
+    </div>
+    <!--<audio id="miro_sound_new">
+      <source src="./common/sounds/new.mp3" type="audio/mp3">
+    </audio>-->
+    <!--<audio id="miro_sound_okay">
+      <source src="./common/sounds/okay.wav" type="audio/wav">
+    </audio>-->
+    <!--<audio id="miro_sound_wrong">
+      <source src="./common/sounds/wrong.wav" type="audio/wav">
+    </audio>-->
+    <!--<audio id="miro_sound_opening">
+      <source src="./common/sounds/opening.wav" type="audio/wav">
+    </audio>-->
+  </div>
+  <div id="game" class="incompatible">
+    <div id="to_fullscreen">
+      <div>
+        You can escape a maze in your computer <br />with a latest Chrome browser (70 and above) on a PC or
+        Mac.<br /><br />
+        당신의 컴퓨터 속에서 탈출하는 미로는 PC 또는 Mac 환경에서 <br />최신버전의 Chrome (70 이상)으로 즐길 수 있습니다.
+      </div>
+    </div>
+  </div>
+  <footer>
+    &copy; Team MiRO
+  </footer>
+  <script>
+  </script>
+  <script src="./en_js/vue_control.js"></script>
+  <script src="./en_js/fullscreen.js"></script>
+  <script>
+    app.set_stage('welcome_1');
+    miro_sound_register();
+    document.addEventListener('contextmenu', event => event.preventDefault());
+  </script>
+  <script>
+    let compatability = parseInt(navigator.userAgent.match('Chrome/[0-9]+')?.[0]?.split("/")?.[1]) > 70;
+    if (compatability) {
+      document.querySelector(".incompatible").style.display = 'none';
+    } else {
+      document.querySelector(".compatible").style.display = 'none';
+    }
+  </script>
+</body>
+
+</html>

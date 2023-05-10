@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <title>MiRO - Maze in a Real OS</title>
+    <link rel="stylesheet" href="./css/miro_main_page.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="./js/fullscreen.js"></script>
+  </head>
+  <body>
+    <header>
+      <strong>MiRO</strong> Maze in a Real OS
+    </header>
+    <section id="content-compatible" class="main-content">
+      <p>
+        Escape a maze in your computer! <br />
+        당신의 컴퓨터 속 미로를 탈출해보세요.
+      </p>
+      <p>
+        <strong>Before starting / 시작 전 주의사항</strong>
+      </p>
+      <ul>
+        <li>This game is operated on the full-screen mode.<br/>이 게임은 전체화면으로 진행됩니다.</li>
+        <li>To stop playing the game, press the ESC key. Otherwise, please do not press the ESC key.<br/>
+          게임 종료를 위해서는 ESC 키를 누르십시오. 그 외의 경우에는 ESC 키를 누르지 마십시오.</li>
+        <li>Right-clicking and keyboard shortcuts (including Ctrl/Cmd + C/V) are blocked.<br/>
+          마우스 우클릭, 키보드 단축키 (컨트롤/커맨드 + C/V 포함)은 불가능합니다.</li>
+        <li>You cannot save your play. Thus, by pressing F5 key or refreshing the browser, your game will be stopped and unsaved.<br/>
+          이 게임은 저장되지 않습니다. F5키를 누르거나 브라우저를 새로고침하면 게임이 저장되지 않은 채로 종료됩니다.</li>
+        <li>By using this game, you agree with our <a href="./policy2.html">agreement</a> and <a href="./policy2.html">cookie policy</a>: saving your game-playing (no personal/private information).<br/>
+          이 게임을 이용하면 우리의 <a href="./policy2.html">쿠키 정책</a>(게임 플레이 저장, 개인 정보 저장 없음) 및 <a href="./policy2.html">이용 약관</a>에 동의하게 됩니다.</li>
+        <li>
+          이 게임의 버전은 MiRO v1.00입니다.<br/>
+          The version of this game is MiRO v1.00.
+        </li>
+      </ul>
+      <p><br/>
+        First, choose a language preference.<br />
+        먼저 언어 옵션을 선택하세요.
+      </p>
+      <p>
+        <a href="./game.html">한국어<br/><em>🇰🇷 Korean</em></a>
+        <a href="./en_game.html">English<br/><em>🇬🇧🇺🇸 영어</em></a>  
+      </p>
+    </section>
+    <section id="content-incompatible" class="main-content">
+      <p>
+        You can escape a maze in your computer <br/>with a latest Chrome browser (70 and above) on a PC or Mac.<br /><br />
+        당신의 컴퓨터 속에서 탈출하는 미로는 PC 또는 Mac 환경에서 <br />최신버전의 Chrome (70 이상)으로 즐길 수 있습니다.
+      </p>
+    </section>
+    <footer>
+      &copy; <strong>Team MiRO</strong><br/><br/>
+      Have any questions? Click <a href="mailto:/kimhyuck777@gmail.com">here</a> to let us know!<br/>
+      <section id="members">
+        <article>
+          <div class="image">
+            <img src="./image/non_app/thumb_hyeok.png" />
+          </div>
+          <span class="role">
+            Developer
+          </span>
+          <span class="name">
+            Hyeok Kim
+          </span>
+        </article>
+        <article>
+          <div class="image">
+            <img src="./image/non_app/thumb_haesoo.png" />
+          </div>
+          <span class="role">
+            Developer
+          </span>
+          <span class="name">
+            Haesoo Kim
+          </span>
+        </article>
+        <article>
+          <div class="image">
+            <img src="./image/non_app/thumb_youngjin.png" />
+          </div>
+          <span class="role">
+            Designer
+          </span>
+          <span class="name">
+            Youngjin Kwon
+          </span>
+        </article>
+        <article>
+          <div class="image">
+            <img src="./image/non_app/thumb_hansol.png" />
+          </div>
+          <span class="role">
+            Storyteller
+          </span>
+          <span class="name">
+            Hansol Jang
+          </span>
+        </article>
+        <article>
+          <div class="image">
+            <img src="./image/non_app/thumb_soomin.png" />
+          </div>
+          <span class="role">
+            Storyteller
+          </span>
+          <span class="name">
+            Soomin Lee
+          </span>
+        </article>
+      </section>
+    </footer>
+    <script>
+      let compatability = parseInt(navigator.userAgent.match('Chrome/[0-9]+')?.[0]?.split("/")?.[1]) > 70;
+      if (compatability) {
+        document.getElementById("content-incompatible").style.display = 'none';
+      } else {
+        document.getElementById("content-compatible").style.display = 'none';
+      }
+    </script>
+  </body>
+</html>

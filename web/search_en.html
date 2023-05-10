@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+
+<head>
+  <title></title>
+  <!--preload-->
+  <link rel="preload" href="../js/search_engine.js" as="script">
+  <link rel="stylesheet" href="../css/miro_game_web.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id="search">
+    <div class="search_wrap" v-if="mode === 'search_main'">
+      <div class="search_main_wrap">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_desc">
+          search engine for you
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+    </div>
+    <div class="search_wrap" v-else-if="mode === 'search_output'">
+      <div class="search_head">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" :value="search_keyword" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+      <div class="search_result">
+        <div v-if="search_code_key == 'snp'">
+          <span class="search_count">1 Search result</span>
+          <div class="search_result_item">
+            <span class="title">SNP(Social Network Privacy) Project</span>
+            <span class="subtitle">A project by Jeremy Foucault</span>
+            <span class="desc">
+              ‘SNP(Social Network Privacy) Project’ is a project attempting to <strong>maximize individuals’ data
+                protection.</strong> This project was proposed by Jeremy Foucault to counteract the ‘TE(Third Eye)
+              project’ carried by several governments in the past. A considerable number of critics appraised this
+              project, along with his renown EDF system, as to have reclaimed individuals’ everyday lives and freedom.
+              <span class="topic">Related image</span>
+              <div class="image_wrap"></div>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'edf'">
+          <span class="search_count">1 Search result</span>
+          <div class="search_result_item">
+            <span class="title">EDF</span>
+            <span class="subtitle">A file type</span>
+            <span class="desc">‘EDF(Encrypted Data Format)’ is a file format provided by Pacific Telecommunications and
+              Network Partner. EDF file format is a new method that encrypts the original file and also controls the
+              approach for reading and editing.Through this PTNP was able to provide high-level information protection
+              system.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'te'">
+          <span class="search_count">1 Search result</span>
+          <div class="search_result_item">
+            <span class="title">Third Eye Project</span>
+            <span class="subtitle">A government project</span>
+            <span class="desc">‘TE(Third Eye) Project’ is a project done by the Government in the past years. The
+              essentials of the project was to convert personal devices into data collecting terminals by using the
+              attached camera’s eye tracking functions. Through this the Government turned the users of the network into
+              surveillance units, puting the world under their surveillance. The project resulted widespread distrust in
+              global society, but eventually the privacy system designed by Jeremy Foucault was able to put the project
+              to an end.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'ptnp'">
+          <span class="search_count">1 Search result</span>
+          <div class="search_result_item">
+            <span class="title">Pacific Telecommunications and Network Partner</span>
+            <span class="subtitle">A network corporation</span>
+            <span class="desc">Pacific Telecommunications and Network Partner(PTNP) company is a firm founded by the
+              world-renowned scholar Jeremy Foucault, which provides telecommunication and network service around the
+              Pacific Rim area. During the times when the TE project of the Government was controlling the globe, the
+              company have resisted against them, making a big impression on the public. Later the company have become
+              the most leading company in the field by providing high level security services that no other was able to
+              provide, through current CEO’s invention, EDF system.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'jf'">
+          <span class="search_count">1 Search result</span>
+          <div class="search_result_item">
+            <span class="title">Jeremy Foucault</span>
+            <span class="subtitle">CEO, a scholar</span>
+            <span class="desc">Jeremy Foucault is current CEO of PNTP company and a world-renowned scholar. Born in
+              Poitier, France, Foucault studied Philosophy and Psychology at École Normale Supérieure. After exposing
+              the TE project of the Government, he found refuge in Korea and founded Free Telecommunications, which
+              later becomes the current Pacific Telecommunications & Network Partner. Since then he is continuing
+              vigorous activities, leading the SNP project and developing EDF system.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="search_wrap" v-else-if="mode === 'search_external'">
+      <div class="search_head">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" :value="search_keyword" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+      <div class="search_result">
+        <div>
+          <span class="search_count">## out of ## search results</span>
+          <div class="search_result_item">
+            <span class="search_count">Search results are not available due to security issues. <br /></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+  </div>
+  <script>
+    let key = "o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ";
+  </script>
+  <script src="../en_js/search_engine.js"></script>
+  <script>
+    document.addEventListener('contextmenu', event => event.preventDefault());
+  </script>
+</body>
+
+</html>

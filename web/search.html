@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+
+<head>
+  <title></title>
+  <!--preload-->
+  <link rel="preload" href="../js/search_engine.js" as="script">
+  <link rel="stylesheet" href="../css/miro_game_web.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id="search">
+    <div class="search_wrap" v-if="mode === 'search_main'">
+      <div class="search_main_wrap">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_desc">
+          search engine for you
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+    </div>
+    <div class="search_wrap" v-else-if="mode === 'search_output'">
+      <div class="search_head">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" :value="search_keyword" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+      <div class="search_result">
+        <div v-if="search_code_key == 'snp'">
+          <span class="search_count">검색결과 1개</span>
+          <div class="search_result_item">
+            <span class="title">SNP(Social Network Privacy) 프로젝트</span>
+            <span class="subtitle">제레미 푸코의 프로젝트</span>
+            <span class="desc">‘SNP(Social Network Privacy) 프로젝트’는 사회 구성원으로써의 <stronog>개인의 정보 보호를 극대화</stronog>시키려는
+              프로젝트이다.이는 과거 여러 정부들에서 벌어지던 ‘TE(Third Eye) 프로젝트’에 대항하여 제레미 푸코가 제안하였으며,다수의 평론가들은 그의 또다른 업적인 EDF 시스템과 함께 개인에게
+              일상생활에서의 자유를 되찾아주었다고 평한다.</span>
+            <span class="topic">관련 이미지</span>
+            <div class="image_wrap"></div>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'edf'">
+          <span class="search_count">검색결과 1개</span>
+          <div class="search_result_item">
+            <span class="title">EDF</span>
+            <span class="subtitle">파일 형식의 종류</span>
+            <span class="desc">‘EDF(Encrypted Data Format)’는 Pacific Telecommunications and Network Partner사에서 제공하는 파일
+              형식으로,
+              원본을 암호화함과 동시에 열람 및 수정을 위한 접근을 통제하는 새로운 방식이다. 이를 통해 PTNP는 고차원적인 정보 보호 시스템을 제공할 수 있었다.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'te'">
+          <span class="search_count">검색결과 1개</span>
+          <div class="search_result_item">
+            <span class="title">Third Eye 프로젝트</span>
+            <span class="subtitle">정부 프로젝트</span>
+            <span class="desc">‘TE(Third Eye) 프로젝트’는 과거 정부 공동체에서 시행된 프로젝트로, 카메라의 안구 트래킹 기능을 이용해 개인의 디바이스를 주변 정보를 수집하는
+              네트워크
+              단말기로 변환시켰다. 이로써 정부 공동체는 네트워크 이용자들을 자신들의 제 3의 눈으로 이용했고, 세계를 감시하는데 성공하였다. 해당 프로젝트를 통해 세상은 불신으로 가득하게 되었으나,
+              제레미
+              푸코가 고안한 보안 시스템에 의해 결국 실패로 돌아갔다.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'ptnp'">
+          <span class="search_count">검색결과 1개</span>
+          <div class="search_result_item">
+            <span class="title">Pacific Telecommunications and Network Partner</span>
+            <span class="subtitle">통신۰네트워크 회사</span>
+            <span class="desc">Pacific Telecommunications and Network Partner(PTNP)사는 저명한 학자 제레미 푸코가 창립한 회사로, 환태평양 일대의
+              통신۰네트워크 서비스를 제공하는 회사이다. 정부 공동체의 TE 프로젝트가 네트워크망을 지배하던 당시 이에 저항하는 데에 앞장서서 대중들에게 큰 인상을 남겼다. 이후 현 CEO 제레미 푸코가
+              개발한
+              EDF라는 특수 파일 포맷으로 다른 경쟁 회사들이 제공하지 못한 고차원적인 보안 시스템을 제공하여 분야의 독보적인 회사로 떠올랐다.</span>
+          </div>
+        </div>
+        <div v-else-if="search_code_key == 'jf'">
+          <span class="search_count">검색결과 1개</span>
+          <div class="search_result_item">
+            <span class="title">제레미 푸코</span>
+            <span class="subtitle">CEO, 학자</span>
+            <span class="desc">제레미 푸코(Jeremy Foucault)는 PTNP 사의 현 CEO이자 저명한 학자이다. 프랑스 푸아티에에서 태어나 École Normale
+              Supérieure에서
+              철학과 심리학을 공부하였다. 이후 정부의 TE 프로젝트를 폭로한 후 한국으로 망명하여 Pacific Telecommunications & Network Partner의 전신인 Free
+              Telecommunications를 설립하였다. 이후 회사의 SNP 프로젝트를 이끌고 EDF 시스템을 개발하는 등 왕성한 활동을 하고 있다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="search_wrap" v-else-if="mode === 'search_external'">
+      <div class="search_head">
+        <div id="search_logo">
+          <a href="search?ackey=o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ"><img src="../image/web/poodle_logo.png"></a>
+        </div>
+        <div class="search_input">
+          <input id="search_input" autocomplete="off" :value="search_keyword" />
+          <button @click="search()"><img src="../image/web/search_button.png" /></button>
+        </div>
+      </div>
+      <div class="search_result">
+        <div>
+          <span class="search_count">총 검색결과 ## 중 ## 개</span>
+          <div class="search_result_item">
+            <span class="search_count">보안상의 이유로 검색 결과를 확인할 수 없습니다. <br /></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+  </div>
+  <script>
+    let key = "o8dZuW1UQBFKMhwtEU0BN72nn9HzAwsJ";
+  </script>
+  <script src="../js/search_engine.js"></script>
+  <script>
+    document.addEventListener('contextmenu', event => event.preventDefault());
+  </script>
+</body>
+
+</html>
